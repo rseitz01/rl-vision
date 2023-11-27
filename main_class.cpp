@@ -21,7 +21,7 @@ int main(void)
     ueye.setParamPixelClock(-1);
     //ueye.setParamRoi(0, 0, 1000, 1000);
     ueye.setParamExposure(50);
-    ueye.setParamFramerate(10);
+    ueye.setParamFramerate(60);
     ueye.setParamGamma(2.2);
     ueye.setParamShutterMode(IS_DEVICE_FEATURE_CAP_SHUTTER_MODE_GLOBAL);
     ueye.setParamGain(100);
@@ -45,10 +45,10 @@ int main(void)
 
             /* create drop frames string */
             auto str_drop_frames = cv::String("Drop Frames : " + std::to_string(stats.drop_frames));
-            
+
             /* create timestamp */
             char str_timestamp[32] = { 0 };
-            snprintf(str_timestamp, 32, "%02d.%02d.%04d, %02d:%02d:%02d:%03d", 
+            snprintf(str_timestamp, 32, "%02d.%02d.%04d, %02d:%02d:%02d:%03d",
                 stats.info.TimestampSystem.wDay,
                 stats.info.TimestampSystem.wMonth,
                 stats.info.TimestampSystem.wYear,
@@ -56,7 +56,7 @@ int main(void)
                 stats.info.TimestampSystem.wMinute,
                 stats.info.TimestampSystem.wSecond,
                 stats.info.TimestampSystem.wMilliseconds);
-            
+
             /* create fps string */
             if (stats.fps) {
                 char fps_buf[32] = { 0 };
