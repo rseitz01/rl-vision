@@ -96,7 +96,7 @@ int main(void)
     //is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_WHITEBALANCE, &disable, 0);
     //is_SetAutoParameter(hCam, IS_SET_ENABLE_AUTO_SENSOR_SHUTTER, &disable, 0);
 
-#if 0
+#if 1
     UINT nNumberOfSupportedPixelClocks = 0;
     nRet = is_PixelClock(hCam, IS_PIXELCLOCK_CMD_GET_NUMBER,
         (void*)&nNumberOfSupportedPixelClocks,
@@ -250,18 +250,19 @@ int main(void)
 #if 1
         char* pcMem = 0;
         int nMemId = 0;
-        is_GetImageMem(hCam, (void **) &pcMem);
-        is_LockSeqBuf(hCam, 0, pcMem);
-
-        is_UnlockSeqBuf(hCam, 0, pcMem);
-
         unsigned int pending = 0;
         if ((error = is_ImageQueue(hCam, IS_IMAGE_QUEUE_CMD_GET_PENDING, &pending, sizeof(pending)))) {
             printf("could not get pending image queue (%d)\n", error);
             is_GetError(hCam, &lastError, &errstr);
             printf("error %d: %s\n", lastError, errstr);
         }
+        printf("pending : %d\n", pending);
+        
         if (pending) {
+
+            is_GetImageMem(hCam, (void**)&pcMem);
+            is_LockSeqBuf(hCam, 0, pcMem);
+            is_UnlockSeqBuf(hCam, 0, pcMem);
 
             //if (first_tp == std::chrono::steady_clock::time_point{}) {
             //first_tp = std::chrono::steady_clock::now();
@@ -321,6 +322,12 @@ int main(void)
         printf("error %d: %s\n", lastError, errstr);
     }
 
+    if ((error = is_ImageQueue(hCam, IS_IMAGE_QUEUE_CMD_EXIT, 0, 0))) {
+        printf("could not stop video capture (%d)\n", error);
+        is_GetError(hCam, &lastError, &errstr);
+        printf("error %d: %s\n", lastError, errstr);
+    }
+
     if ((error = is_ClearSequence(hCam))) {
         printf("could not stop video capture (%d)\n", error);
         is_GetError(hCam, &lastError, &errstr);
@@ -337,7 +344,6 @@ int main(void)
         is_GetError(hCam, &lastError, &errstr);
         printf("error %d: %s\n", lastError, errstr);
     }
-
 
     if ((error = is_ExitCamera(hCam))) {
         printf("could not close camera (%d)\n", error);

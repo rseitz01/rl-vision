@@ -15,15 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Cam.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Ueye.cpp">
+    <ClCompile Include="main_class.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Ueye.h">
+    <ClInclude Include="Cam.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
