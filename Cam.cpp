@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+/*
+ * is_getimageinfo
+ */
 //HIDS m_hCam = { 0 };
 
 namespace Cam {
@@ -289,9 +292,9 @@ namespace Cam {
         m_imgMem.resize(0);
         for (double f = 0; f < bufferlen_s; f += 1.0 / fps) {
             size_t i = m_imgMem.size();
-            m_imgMem.resize(i + 1);
+            //m_imgMem.resize(i + 1);
             int memId = 0;
-            char* imgMem = m_imgMem.back();
+            char* imgMem = 0; // m_imgMem.back();
             if ((m_error = is_AllocImageMem(m_hCam, img_width, img_height, nBitsPerPixel, &imgMem, &memId))) {
                 this->printError("could not allocate image memory");
                 return -1;
@@ -300,6 +303,7 @@ namespace Cam {
                 this->printError("could not add memory to sequence");
                 return -1;
             }
+            m_imgMem.push_back(imgMem);
             //printf("memids[%d] = %d\n", i, memIds[i]);
         }
         if ((m_error = is_ImageQueue(m_hCam, IS_IMAGE_QUEUE_CMD_INIT, 0, 0))) {
@@ -342,6 +346,7 @@ namespace Cam {
     }
 
     int Ueye::videoStart(void) {
+        this->rebuildFramebuffer();
         if ((m_error = is_SetExternalTrigger(m_hCam, IS_SET_TRIGGER_OFF))) {
             this->printError("could not disable external trigger");
             return -1;
@@ -354,10 +359,8 @@ namespace Cam {
             this->printError("could not retrieve region of interest");
             return -1;
         }
-        m_framestats.chr_prev = std::chrono::steady_clock::now();
-        m_framestats.drop_frames = 0;
-        m_framestats.frame_count = 0;
-        m_framestats.fps = 0;
+        memset(&m_framestats, 0, sizeof(m_framestats));
+        memset(&m_framestats_prev, 0, sizeof(m_framestats_prev));
         return 0;
     }
 
@@ -368,36 +371,58 @@ namespace Cam {
             return -1;
         }
         //printf("pending : %d\n", pending);
-        
+
         if (pending) {
-            char* pcMem = 0;
-            int nMemId = 0;
+            char* pcMemPrev = 0;
+            int nMemIdPrev = 0;
             int img_width = m_roi.s32Width - m_roi.s32X;
             int img_height = m_roi.s32Height - m_roi.s32Y;
 
-            //is_GetImageMem(m_hCam, (void**)&pcMem);
-            is_GetActSeqBuf(m_hCam, &nMemId, 0, &pcMem);
-            is_LockSeqBuf(m_hCam, 0, pcMem);
-            frame = cv::Mat(img_height, img_width, CV_8UC3, pcMem);
-            is_UnlockSeqBuf(m_hCam, 0, pcMem);
+            is_GetActSeqBuf(m_hCam, 0, 0, &pcMemPrev);
+            is_LockSeqBuf(m_hCam, 0, pcMemPrev);
+            /* read frame */
+            frame = cv::Mat(img_height, img_width, CV_8UC3, pcMemPrev);
+            /* get image info, aka. framestats */
+            //memcpy(&m_framestats_prev, &m_framestats, sizeof(m_framestats));
+            for (nMemIdPrev = 0; nMemIdPrev < m_imgMem.size(); nMemIdPrev++) {
+                if (pcMemPrev == m_imgMem[nMemIdPrev]) {
+                    nMemIdPrev++;
+                    break;
+                }
+            }
+            if (is_GetImageInfo(m_hCam, nMemIdPrev, &m_framestats.info, sizeof(m_framestats.info))) {
+                this->printError("could not get image info");
+                return -1;
+            }
+            is_UnlockSeqBuf(m_hCam, 0, pcMemPrev);
 
-            m_framestats.chr_now = std::chrono::steady_clock::now();
             m_framestats.frame_count++;
             m_framestats.drop_frames += (pending - 1);
 
-            if (m_framestats.chr_now - m_framestats.chr_prev >= std::chrono::milliseconds{ 1000 }) {
-                /* Do something with the fps in frame_counter */
-                long long frame_delta = (std::chrono::duration_cast<std::chrono::nanoseconds>(m_framestats.chr_now - m_framestats.chr_prev)).count();
-                m_framestats.fps = frame_delta ? 1.0e9 / (double)frame_delta * m_framestats.frame_count : 0;
-                m_framestats.chr_prev = m_framestats.chr_now;
-                m_framestats.frame_count = 0;
+            /* calculate fps */
+            unsigned int second_last = m_framestats_prev.info.TimestampSystem.wSecond;
+            unsigned int second_current = m_framestats.info.TimestampSystem.wSecond;
+            uint64_t frame_time_last = m_framestats_prev.info.u64TimestampDevice;
+            uint64_t frame_time_current = m_framestats.info.u64TimestampDevice;
+            if (m_past_first_cycle && ((frame_time_current - frame_time_last) / 1e7 > 1.0)) {
+                char fps_buf[32] = { 0 };
+                uint64_t frames_current = m_framestats.frame_count;
+                uint64_t frames_prev = m_framestats_prev.frame_count;
+                double fps = 1e7 * (double)(frames_current - frames_prev) / (double)(frame_time_current - frame_time_last);
+                m_framestats.fps = (m_framestats_prev.fps + 7.0 * fps) / 8.0;
+                memcpy(&m_framestats_prev, &m_framestats, sizeof(m_framestats));
+            } else if (!m_past_first_cycle) {
+                m_past_first_cycle = true;
+                memcpy(&m_framestats_prev, &m_framestats, sizeof(m_framestats));
             }
+            
+            /* discard pending images in queue */
             if ((m_error = is_ImageQueue(m_hCam, IS_IMAGE_QUEUE_CMD_DISCARD_N_ITEMS, &pending, sizeof(pending)))) {
                 this->printError("could not discard n items in image queue");
                 return -1;
             }
             memcpy(&stats, &m_framestats, sizeof(stats));
-            
+
             return 0;
         }
         return -1;

@@ -18,8 +18,9 @@ namespace Cam {
 		typedef struct Framestats {
 			uint64_t drop_frames;
 			uint64_t frame_count;
-			std::chrono::steady_clock::time_point chr_now;
-			std::chrono::steady_clock::time_point chr_prev;
+			UEYEIMAGEINFO  info;
+			//std::chrono::steady_clock::time_point chr_now;
+			//std::chrono::steady_clock::time_point chr_prev;
 			double fps;
 		} Framestats;
 	};
@@ -35,11 +36,14 @@ namespace Cam {
 		SENSORINFO m_sensorInfo = {0}; // Sensor-Daten
 		IS_RECT m_roi = {0};
 
-		UEYE::Framestats m_framestats = {0};
+		UEYE::Framestats m_framestats = { 0 };
+		UEYE::Framestats m_framestats_prev = { 0 };
+		bool m_past_first_cycle = false;
 
 	public:
 		bool m_suppress_warnings;
 		bool m_suppress_infos;
+
 		Ueye(void);
 		//~Ueye(void);
 
@@ -75,7 +79,6 @@ namespace Cam {
 		void printWarning(std::string msg);
 		void printWarning(void);
 		void printInfo(std::string msg);
-		//friend cv::Mat& operator<<(cv::Mat &frame, const Ueye& ueye);
 	};
 
 }
