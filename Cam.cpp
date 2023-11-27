@@ -409,7 +409,7 @@ namespace Cam {
                 uint64_t frames_current = m_framestats.frame_count;
                 uint64_t frames_prev = m_framestats_prev.frame_count;
                 double fps = 1e7 * (double)(frames_current - frames_prev) / (double)(frame_time_current - frame_time_last);
-                m_framestats.fps = (m_framestats_prev.fps + 7.0 * fps) / 8.0;
+                m_framestats.fps = fps; // (m_framestats_prev.fps + 7.0 * fps) / 8.0;
                 memcpy(&m_framestats_prev, &m_framestats, sizeof(m_framestats));
             } else if (!m_past_first_cycle) {
                 m_past_first_cycle = true;
