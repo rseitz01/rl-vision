@@ -354,7 +354,7 @@ namespace Cam {
             this->printError("could not retrieve region of interest");
             return -1;
         }
-        m_framestats.chr_now = steady_clock::now();
+        m_framestats.chr_prev = std::chrono::steady_clock::now();
         m_framestats.drop_frames = 0;
         m_framestats.frame_count = 0;
         m_framestats.fps = 0;
@@ -378,14 +378,14 @@ namespace Cam {
             //is_GetImageMem(m_hCam, (void**)&pcMem);
             is_GetActSeqBuf(m_hCam, &nMemId, 0, &pcMem);
             is_LockSeqBuf(m_hCam, 0, pcMem);
-            frame = cv::Mat(img_height, img_width, CV_8UC1, pcMem);
+            frame = cv::Mat(img_height, img_width, CV_8UC3, pcMem);
             is_UnlockSeqBuf(m_hCam, 0, pcMem);
 
             m_framestats.chr_now = std::chrono::steady_clock::now();
             m_framestats.frame_count++;
             m_framestats.drop_frames += (pending - 1);
 
-            if (m_framestats.chr_now - m_framestats.chr_prev >= std::chrono::seconds{ 1 }) {
+            if (m_framestats.chr_now - m_framestats.chr_prev >= std::chrono::milliseconds{ 1000 }) {
                 /* Do something with the fps in frame_counter */
                 long long frame_delta = (std::chrono::duration_cast<std::chrono::nanoseconds>(m_framestats.chr_now - m_framestats.chr_prev)).count();
                 m_framestats.fps = frame_delta ? 1.0e9 / (double)frame_delta * m_framestats.frame_count : 0;

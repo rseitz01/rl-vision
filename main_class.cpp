@@ -9,12 +9,12 @@
 
 int main(void)
 {
-    auto ueye = Cam::Ueye::Ueye();
+    auto ueye = Cam::Ueye();
     ueye.m_suppress_warnings = true;
     Cam::UEYE::Framestats stats = {0};
 
     if (ueye.connect()) return -1;
-    ueye.setColorMode(IS_CM_MONO8);
+    ueye.setColorMode(IS_CM_BGR8_PACKED);
     ueye.setDisplayMode(IS_SET_DM_DIB);
 
     ueye.setParamPixelClock(128);

@@ -12,16 +12,14 @@
 #include <vector>
 #include <chrono>
 
-using namespace std::chrono;
-
 namespace Cam {
 
 	namespace UEYE {
 		typedef struct Framestats {
 			uint64_t drop_frames;
 			uint64_t frame_count;
-			steady_clock::time_point chr_now;
-			steady_clock::time_point chr_prev;
+			std::chrono::steady_clock::time_point chr_now;
+			std::chrono::steady_clock::time_point chr_prev;
 			double fps;
 		} Framestats;
 	};
