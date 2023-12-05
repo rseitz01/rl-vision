@@ -285,10 +285,10 @@ namespace Cam {
         }
         int img_width = m_roi.s32Width - m_roi.s32X;
         int img_height = m_roi.s32Height - m_roi.s32Y;
-        if ((m_error = is_ClearSequence(m_hCam))) {
+        /*if ((m_error = is_ClearSequence(m_hCam))) {
             this->printError("could not clear image sequence");
             return -1;
-        }
+        }*/
         m_imgMem.resize(0);
         for (double f = 0; f < bufferlen_s; f += 1.0 / fps) {
             size_t i = m_imgMem.size();
@@ -429,6 +429,17 @@ namespace Cam {
     }
 
     int Ueye::videoStop(void) {
+
+        if ((m_error = is_ImageQueue(m_hCam, IS_IMAGE_QUEUE_CMD_EXIT, 0, 0))) {
+            this->printError("could not stop video capture");
+            return -1;
+        }
+
+        if ((m_error = is_ClearSequence(m_hCam))) {
+            this->printError("could not stop video capture");
+            return -1;
+        }
+
         if ((m_error = is_StopLiveVideo(m_hCam, IS_FORCE_VIDEO_STOP))) {
             this->printError("could not stop video capture");
             return -1;

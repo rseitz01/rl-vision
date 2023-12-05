@@ -19,8 +19,6 @@ namespace Cam {
 			uint64_t drop_frames;
 			uint64_t frame_count;
 			UEYEIMAGEINFO  info;
-			//std::chrono::steady_clock::time_point chr_now;
-			//std::chrono::steady_clock::time_point chr_prev;
 			double fps;
 		} Framestats;
 	};

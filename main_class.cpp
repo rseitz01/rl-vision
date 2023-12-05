@@ -19,8 +19,8 @@ int main(void)
     ueye.setDisplayMode(IS_SET_DM_DIB);
 
     ueye.setParamPixelClock(-1);
-    //ueye.setParamRoi(0, 0, 1000, 1000);
-    ueye.setParamExposure(50);
+    //ueye.setParamRoi(0, 0, 600, 500);
+    ueye.setParamExposure(20);
     ueye.setParamFramerate(60);
     ueye.setParamGamma(2.2);
     ueye.setParamShutterMode(IS_DEVICE_FEATURE_CAP_SHUTTER_MODE_GLOBAL);
@@ -28,6 +28,7 @@ int main(void)
     ueye.setParamOffset(10);
     //ueye.paramFileLoad();
 
+    //ueye.rebuildFramebuffer();
     ueye.videoStart();
     // is_GetFramesPerSecond
 
@@ -86,7 +87,9 @@ int main(void)
                 break;
             }
             else if (c == 'l' || c == 'L') {
+                ueye.videoStop();
                 ueye.paramFileLoad();
+                ueye.videoStart();
             }
             else if (c == 's' || c == 'S') {
                 ueye.paramFileSave();
